@@ -1,5 +1,5 @@
 class AttractionsController < ApplicationController
-  before_action :set_attraction, only: [:show] #:edit, :update, :destroy]
+  before_action :set_attraction, only: [:show, :edit, :update] #, :destroy]
 
   def index
     @attractions = Attraction.all
@@ -14,31 +14,42 @@ class AttractionsController < ApplicationController
     # binding.pry
     if @attraction = Attraction.find(params[:attraction_id])
       ride = Ride.create(user_id: current_user.id, attraction_id: @attraction.id)
-      ride.take_ride
-      flash[:notice] = "Thanks for riding the #{@attraction.name}!"
+      flash[:notice] = ride.take_ride
       redirect_to current_user
     end
   end
 
-  # def new
-  #   @user = User.new
-  # end
-  #
-  # def create
-  #   @user = User.new(user_params)
-  #   # binding.pry
-  #   if @user.save
-  #     session[:user_id] = @user.id
-  #     redirect_to @user
-  #   else
-  #     render :new
-  #   end
-  # end
-  #
-  # def show
-  #   # binding.pry
-  #   redirect_to '/' unless logged_in?
-  # end
+  def new
+    if current_user.admin
+      @attraction = Attraction.new
+    else
+      redirect_to attractions_path
+    end
+  end
+
+  def create
+    @attraction = Attraction.new(attraction_params)
+    # binding.pry
+    if current_user.admin
+      @attraction.save
+      redirect_to @attraction
+    else
+      redirect_to current_user
+    end
+  end
+
+  def edit
+  end
+
+  def update
+    if current_user.admin
+      @attraction.update(attraction_params)
+      redirect_to @attraction
+    else
+      redirect_to current_user
+    end
+  end
+
 
 
   private
@@ -48,8 +59,8 @@ class AttractionsController < ApplicationController
     end
   #
   #   # Never trust parameters from the scary internet, only allow the white list through.
-  #   def user_params
-  #     params.require(:user).permit(:name, :height, :happiness, :nausea, :tickets, :password, :admin)
-  #   end
+    def attraction_params
+      params.require(:attraction).permit(:name, :min_height, :happiness_rating, :nausea_rating, :tickets)
+    end
 
 end
